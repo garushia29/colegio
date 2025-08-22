@@ -1,6 +1,6 @@
 Options -Indexes
 RewriteEngine On
-RewriteBase /colegio_jim/public/
+RewriteBase /colegio/public/
 
 # Redirigir todo a index.php
 RewriteCond %{REQUEST_FILENAME} !-f
