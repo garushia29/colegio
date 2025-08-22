@@ -1,0 +1,4 @@
+DirectoryIndex public/login.php
+
+RewriteEngine On
+RewriteRule ^$ public/login.php [L]
