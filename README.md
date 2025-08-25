@@ -1,4 +1,4 @@
-# Sistema de Gestión Escolar - Colegio JIM
+# Sistema de Gestión Escolar - Colegio
 
 Este sistema permite la gestión de cursos y estudiantes para una institución educativa.
 
