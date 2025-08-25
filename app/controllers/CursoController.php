@@ -1,244 +1,137 @@
 <?php
-/**
- * Controlador para gestionar las operaciones relacionadas con los cursos
- */
 require_once __DIR__ . '/../models/Curso.php';
-require_once __DIR__ . '/../models/Estudiante.php';
 
-class CursoController {
+class CursoController
+{
     private $pdo;
     private $cursoModel;
-    private $estudianteModel;
-
-    /**
-     * Constructor del controlador
-     * @param PDO $pdo Conexión a la base de datos
-     */
-    public function __construct($pdo) {
+    public function __construct($pdo)
+    {
         $this->pdo = $pdo;
-        $this->cursoModel = new Curso($pdo);
-        $this->estudianteModel = new Estudiante($pdo);
+        $this->cursoModel = new Curso($this->pdo);
     }
 
-    /**
-     * Mostrar lista de cursos
-     * @return void
-     */
-    public function index() {
-        // Obtener todos los cursos
-        $cursos = $this->cursoModel->getAll();
-        
-        // Obtener mensajes de sesión
-        $error = $this->getSessionMessage('error');
-        $success = $this->getSessionMessage('success');
-        
-        // Cargar la vista
+    public function index()
+    {
+        $search = $_GET['search'] ?? '';
+
+        if (!empty($search)) {
+            $cursos = $this->cursoModel->search($search);
+        } else {
+            $stmt = $this->pdo->prepare("SELECT c.*, COUNT(e.id) as total_estudiantes 
+                                         FROM cursos c 
+                                         LEFT JOIN estudiantes e ON c.id = e.curso_id 
+                                         GROUP BY c.id 
+                                         ORDER BY c.grado, c.seccion");
+            $stmt->execute();
+            $cursos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+
         include __DIR__ . '/../views/cursos/index.php';
     }
 
-    /**
-     * Mostrar formulario para crear curso
-     * @return void
-     */
-    public function create() {
-        // Obtener mensajes de sesión
-        $error = $this->getSessionMessage('error');
-        $success = $this->getSessionMessage('success');
-        
-        // Cargar la vista
+    public function create()
+    {
         include __DIR__ . '/../views/cursos/create.php';
     }
-    
-    /**
-     * Obtener y limpiar un mensaje de sesión
-     * @param string $key Clave del mensaje en la sesión
-     * @return string|null Mensaje o null si no existe
-     */
-    private function getSessionMessage($key) {
-        $message = isset($_SESSION[$key]) ? $_SESSION[$key] : null;
-        if (isset($_SESSION[$key])) {
-            unset($_SESSION[$key]);
-        }
-        return $message;
-    }
 
-    /**
-     * Guardar nuevo curso
-     * @return void
-     */
-    public function store() {
+    public function store()
+    {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Validar datos de entrada
-            if (empty($_POST['grado']) || empty($_POST['seccion'])) {
-                $_SESSION['error'] = 'Los campos Grado y Sección son obligatorios';
-                header('Location: /agregar_curso.php');
+            $grado = $_POST['grado'] ?? '';
+            $seccion = $_POST['seccion'] ?? '';
+            $descripcion = $_POST['descripcion'] ?? '';
+            $año_escolar = $_POST['año_escolar'] ?? date('Y');
+
+            if (empty($grado) || empty($seccion)) {
+                $_SESSION['error'] = 'Grado y Sección son obligatorios';
+                header("Location: " . URL . "public/cursos/create");
                 exit;
             }
-            
-            // Preparar datos
+
+            $cursoModel = new Curso($this->pdo);
+            $cursoModel->create([
+                'grado' => $grado,
+                'seccion' => $seccion,
+                'descripcion' => $descripcion,
+                'año_escolar' => $año_escolar
+            ]);
+
+            $_SESSION['success'] = 'Curso creado correctamente';
+            header("Location: " . URL . "public/cursos");
+            exit;
+        }
+    }
+
+    public function edit($id)
+    {
+        $curso = $this->cursoModel->findById($id);
+        include __DIR__ . '/../views/cursos/edit.php'; // ruta correcta
+    }
+
+    // Actualizar en la BD
+    public function update()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id = $_POST['id'] ?? null;
+            if (!$id) {
+                $_SESSION['error'] = 'ID del curso no definido';
+                header("Location: " . URL . "public/cursos");
+                exit;
+            }
+
             $data = [
-                'grado' => $_POST['grado'],
-                'seccion' => $_POST['seccion'],
-                'descripcion' => isset($_POST['descripcion']) ? $_POST['descripcion'] : '',
-                'año_escolar' => isset($_POST['año_escolar']) ? $_POST['año_escolar'] : date('Y')
+                'grado' => $_POST['grado'] ?? '',
+                'seccion' => $_POST['seccion'] ?? '',
+                'descripcion' => $_POST['descripcion'] ?? '',
+                'año_escolar' => $_POST['año_escolar'] ?? date('Y')
             ];
 
-            // Intentar crear el curso
-            $result = $this->cursoModel->create($data);
-            if ($result) {
-                $_SESSION['success'] = 'Curso creado correctamente';
-                header('Location: /index.php');
-                exit;
-            } else {
-                $_SESSION['error'] = 'Error al crear el curso';
-                header('Location: /agregar_curso.php');
-                exit;
-            }
-        } else {
-            // Si no es POST, redirigir
-            header('Location: /agregar_curso.php');
+            $this->cursoModel->update($id, $data);
+
+            $_SESSION['success'] = 'Curso actualizado correctamente';
+            header("Location: " . URL . "public/cursos");
             exit;
         }
     }
-    
-    /**
-     * Mostrar estudiantes de un curso específico
-     * @param int $id ID del curso
-     * @return void
-     */
-    public function showStudents($id) {
-        // Validar ID
-        $id = filter_var($id, FILTER_VALIDATE_INT);
+    public function show($id)
+    {
         if (!$id) {
-            $_SESSION['error'] = 'ID de curso no válido';
-            header('Location: /index.php');
+            header("Location: " . URL . "public/cursos");
             exit;
         }
-        
-        // Obtener el curso
-        $curso = $this->cursoModel->getById($id);
-        if (!$curso) {
-            $_SESSION['error'] = 'El curso no existe';
-            header('Location: /index.php');
-            exit;
-        }
-        
-        // Obtener estudiantes del curso
-        $estudiantes = $this->estudianteModel->getByCurso($id);
-        
-        // Obtener mensajes de sesión
-        $error = $this->getSessionMessage('error');
-        $success = $this->getSessionMessage('success');
-        
-        // Cargar la vista
-        include __DIR__ . '/../views/estudiantes/por_curso.php';
+
+        $curso = $this->cursoModel->findById($id);
+
+        // Obtener búsqueda y paginación
+        $search = $_GET['search'] ?? '';
+        $page = $_GET['page'] ?? 1;
+        $limit = 10;
+        $offset = ($page - 1) * $limit;
+
+        $estudiantes = $this->cursoModel->getEstudiantes($id, $search, $limit, $offset);
+        $total = $this->cursoModel->countEstudiantes($id, $search);
+        $totalPages = ceil($total / $limit);
+
+        include __DIR__ . '/../views/cursos/show.php';
     }
 
-    /**
-     * Mostrar formulario para editar curso
-     * @param int $id ID del curso a editar
-     * @return void
-     */
-    public function edit($id) {
-        // Validar ID
-        $id = filter_var($id, FILTER_VALIDATE_INT);
+    public function delete($id)
+    {
         if (!$id) {
-            $_SESSION['error'] = 'ID de curso inválido';
-            header('Location: /index.php');
+            header("Location: " . URL . "public/cursos");
             exit;
         }
-        
-        // Obtener datos del curso
-        $curso = $this->cursoModel->getById($id);
-        if (!$curso) {
-            $_SESSION['error'] = 'Curso no encontrado';
-            header('Location: /index.php');
-            exit;
-        }
-        
-        // Obtener mensajes de error si existen
-        $error = $this->getSessionMessage('error');
-        
-        // Cargar la vista
-        include __DIR__ . '/../views/cursos/edit.php';
-    }
 
-    /**
-     * Actualizar curso
-     * @param int $id ID del curso a actualizar
-     * @return void
-     */
-    public function update($id) {
-        // Validar ID
-        $id = filter_var($id, FILTER_VALIDATE_INT);
-        if (!$id) {
-            $_SESSION['error'] = 'ID de curso inválido';
-            header('Location: /index.php');
-            exit;
-        }
-        
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Validar datos de entrada
-            if (empty($_POST['grado']) || empty($_POST['seccion'])) {
-                $_SESSION['error'] = 'Todos los campos son obligatorios';
-                header('Location: /editar_curso.php?id=' . $id);
-                exit;
-            }
-            
-            // Preparar datos
-            $data = [
-                'grado' => $_POST['grado'],
-                'seccion' => $_POST['seccion']
-            ];
-
-            // Intentar actualizar el curso
-            $result = $this->cursoModel->update($id, $data);
-            if ($result) {
-                $_SESSION['success'] = 'Curso actualizado correctamente';
-                header('Location: /index.php');
-                exit;
-            } else {
-                $_SESSION['error'] = 'Error al actualizar el curso';
-                header('Location: /editar_curso.php?id=' . $id);
-                exit;
-            }
-        } else {
-            // Si no es POST, redirigir
-            header('Location: /editar_curso.php?id=' . $id);
-            exit;
-        }
-    }
-
-    /**
-     * Eliminar curso
-     * @param int $id ID del curso a eliminar
-     * @return void
-     */
-    public function delete($id) {
-        // Validar ID
-        $id = filter_var($id, FILTER_VALIDATE_INT);
-        if (!$id) {
-            $_SESSION['error'] = 'ID de curso inválido';
-            header('Location: /index.php');
-            exit;
-        }
-        
-        // Verificar que el curso existe
-        $curso = $this->cursoModel->getById($id);
-        if (!$curso) {
-            $_SESSION['error'] = 'Curso no encontrado';
-            header('Location: /index.php');
-            exit;
-        }
-        
-        // Intentar eliminar el curso
         $result = $this->cursoModel->delete($id);
+
         if ($result) {
             $_SESSION['success'] = 'Curso eliminado correctamente';
         } else {
-            $_SESSION['error'] = 'Error al eliminar el curso';
+            $_SESSION['error'] = 'Error al eliminar curso';
         }
-        header('Location: /index.php');
+
+        header("Location: " . URL . "public/cursos");
         exit;
     }
 }

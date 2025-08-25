@@ -4,7 +4,12 @@
   <meta charset="UTF-8">
   <title>Editar Curso - Garrón y Massiel</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="../public/css/style_index.css" />
+ 
+  <link rel="stylesheet" href="<?php echo URL; ?>public/css/cursos_create.css">
+    <link rel="stylesheet" href="<?php echo URL; ?>public/css/navbar.css">
+    <link rel="stylesheet" href="<?php echo URL; ?>public/css/style_index.css">    
+    <link rel="stylesheet" href="<?php echo URL; ?>public/css/footer.css">
+</head>
   <style>
     .form-container {
       max-width: 600px;
@@ -26,25 +31,8 @@
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-custom">
-  <div class="container-fluid">
-    <div class="img-placeholder me-2">
-        <img src="../public/img/logo.jpeg" alt="Marist Logo">
-    </div>
-    <a class="navbar-brand" href="index.php">U.E. Marcelino Champagnat I</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav">
-            <li class="nav-item"><a class="nav-link text-white" href="index.php">Inicio</a></li>
-        </ul>
-        <div class="d-flex ms-auto">
-            <a class="btn btn-danger" href="logout.php">Cerrar Sesión</a>
-        </div>
-    </div>
-  </div>
-</nav>
+<?php include __DIR__ . '/../components/navbar.php';
+    ?>
 
 <div class="container mt-4">
   <h2 class="text-center mb-4">Editar Curso</h2>
@@ -54,26 +42,34 @@
   <?php endif; ?>
   
   <div class="form-container">
-    <form method="POST" action="actualizar_curso.php?id=<?php echo $curso['id']; ?>">
+    <form method="POST" action="<?php echo URL; ?>public/cursos/update">
       <div class="mb-3">
         <label for="grado" class="form-label">Grado:</label>
+        <input type="hidden" name="id" value="<?= $curso['id'] ?>">
         <input type="text" class="form-control" id="grado" name="grado" required value="<?php echo htmlspecialchars($curso['grado']); ?>">
       </div>
       <div class="mb-3">
         <label for="seccion" class="form-label">Sección:</label>
         <input type="text" class="form-control" id="seccion" name="seccion" required value="<?php echo htmlspecialchars($curso['seccion']); ?>">
       </div>
+      <div class="mb-3">
+        <label for="año_escolar" class="form-label">Año Escolar:</label>
+        <input type="text" class="form-control" id="año_escolar" name="año_escolar" value="<?php echo htmlspecialchars($curso['año_escolar']); ?>">
+      </div>
+      <div class="mb-3">
+        <label for="descripcion" class="form-label">Descripción:</label>
+        <textarea class="form-control" id="descripcion" name="descripcion" rows="3"><?php echo htmlspecialchars($curso['descripcion']); ?></textarea>
+      </div>
+      
       <div class="d-grid gap-2">
         <button type="submit" class="btn btn-primary">Actualizar Curso</button>
-        <a href="index.php" class="btn btn-secondary">Cancelar</a>
+        <a href="<?php echo URL; ?>public/cursos" class="btn btn-secondary" class="btn btn-secondary">Cancelar</a>
       </div>
     </form>
   </div>
 </div>
 
-<footer>
-  Derechos de Autor &copy; Fernanda Garrón y Massiel Espíndola 2025
-</footer>
+  <?php include __DIR__ . '/../components/footer.php'; ?>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

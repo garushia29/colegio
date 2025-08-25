@@ -5,7 +5,6 @@
  */
 function mostrarTarjetaCurso($curso) {
 ?>
-<div class="container mt-4">
 <div class="col">
   <div class="card h-100">
     <img src="<?php echo URL; ?>public/img/aula_completo.png" class="card-img-top" alt="Imagen de curso">
@@ -23,12 +22,14 @@ function mostrarTarjetaCurso($curso) {
     </div>
     <div class="card-footer bg-transparent">
       <div class="d-flex justify-content-between">
-         <a href="show.php?curso=<?php echo $curso['id']; ?>">Mostrar</a>
-        
+        <a href="#" class="btn btn-primary btn-sm">Ver Estudiantes</a>
+        <div>
+          <a href="#" class="btn btn-warning btn-sm">Editar</a>
+          <a href="#" class="btn btn-danger btn-sm" onclick="return confirm('¿Está seguro de eliminar este curso?');">Eliminar</a>
+        </div>
       </div>
     </div>
   </div>
-</div>
 </div>
 <?php
 }

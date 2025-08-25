@@ -1,116 +1,94 @@
 <?php
-/**
- * Clase Curso - Modelo para gestionar los cursos en la base de datos
- */
 class Curso {
     private $pdo;
-    private $table = 'cursos';
 
-    /**
-     * Constructor de la clase
-     * @param PDO $pdo Conexión a la base de datos
-     */
     public function __construct($pdo) {
         $this->pdo = $pdo;
+        
     }
 
-    /**
-     * Obtener todos los cursos con conteo de estudiantes
-     * @return array Lista de cursos con el conteo de estudiantes
-     */
     public function getAll() {
-        try {
-            $query = "SELECT c.*, COUNT(e.id) as total_estudiantes FROM {$this->table} c 
-                      LEFT JOIN estudiantes e ON c.id = e.curso_id 
-                      WHERE c.id IS NOT NULL 
-                      GROUP BY c.id 
-                      ORDER BY c.grado, c.seccion";
-            $stmt = $this->pdo->prepare($query);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch(PDOException $e) {
-            error_log('Error al obtener cursos: ' . $e->getMessage());
-            return [];
-        }
+        $stmt = $this->pdo->query("SELECT * FROM cursos ORDER BY grado, seccion");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Obtener un curso por su ID
-     * @param int $id ID del curso a buscar
-     * @return array|false Datos del curso o false si no existe
-     */
-    public function getById($id) {
-        try {
-            $id = filter_var($id, FILTER_VALIDATE_INT);
-            if (!$id) {
-                return false;
-            }
-            
-            $query = "SELECT * FROM {$this->table} WHERE id = ?";
-            $stmt = $this->pdo->prepare($query);
-            $stmt->execute([$id]);
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-        } catch(PDOException $e) {
-            error_log('Error al obtener curso por ID: ' . $e->getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * Crear un nuevo curso
-     * @param array $data Datos del curso (grado, seccion)
-     * @return int|false ID del curso creado o false si falla
-     */
     public function create($data) {
-        try {
-            // Validar datos
-            if (empty($data['grado']) || empty($data['seccion'])) {
-                return false;
-            }
-            
-            // Sanitizar datos
-            $grado = htmlspecialchars(trim($data['grado']));
-            $seccion = htmlspecialchars(trim($data['seccion']));
-            $descripcion = isset($data['descripcion']) ? htmlspecialchars(trim($data['descripcion'])) : '';
-            $año_escolar = isset($data['año_escolar']) ? htmlspecialchars(trim($data['año_escolar'])) : date('Y');
-                        
-            $query = "INSERT INTO {$this->table} (grado, seccion, descripcion, año_escolar) VALUES (?, ?, ?, ?)";
-            $stmt = $this->pdo->prepare($query);
-            $stmt->execute([$grado, $seccion, $descripcion, $año_escolar]);
-            return $this->pdo->lastInsertId();
-        } catch(PDOException $e) {
-            error_log('Error al crear curso: ' . $e->getMessage());
-            return false;
-        }
+        $stmt = $this->pdo->prepare("INSERT INTO cursos (grado, seccion, descripcion, año_escolar) 
+                                     VALUES (:grado, :seccion, :descripcion, :anio_escolar)");
+        $stmt->execute([
+            ':grado' => $data['grado'],
+            ':seccion' => $data['seccion'],
+            ':descripcion' => $data['descripcion'],
+            ':anio_escolar' => $data['año_escolar']
+        ]);
     }
 
-    /**
-     * Actualizar un curso existente
-     * @param int $id ID del curso a actualizar
-     * @param array $data Datos actualizados del curso
-     * @return bool Resultado de la operación
-     */
     public function update($id, $data) {
-        try {
-            // Validar ID y datos
-            $id = filter_var($id, FILTER_VALIDATE_INT);
-            if (!$id || empty($data['grado']) || empty($data['seccion'])) {
-                return false;
-            }
-            
-            // Sanitizar datos
-            $grado = htmlspecialchars(trim($data['grado']));
-            $seccion = htmlspecialchars(trim($data['seccion']));
-            
-            $query = "UPDATE {$this->table} SET grado = ?, seccion = ? WHERE id = ?";
-            $stmt = $this->pdo->prepare($query);
-            $result = $stmt->execute([$grado, $seccion, $id]);
-            return $result;
-        } catch(PDOException $e) {
-            error_log('Error al actualizar curso: ' . $e->getMessage());
-            return false;
-        }
+        $stmt = $this->pdo->prepare("UPDATE cursos 
+                                    SET grado = :grado, 
+                                        seccion = :seccion, 
+                                        descripcion = :descripcion, 
+                                        año_escolar = :anio_escolar
+                                    WHERE id = :id");
+        $stmt->execute([
+            ':grado' => $data['grado'],
+            ':seccion' => $data['seccion'],
+            ':descripcion' => $data['descripcion'],
+            ':anio_escolar' => $data['año_escolar'],
+            ':id' => $id
+        ]);
     }
+    public function findById($id) {
+        $stmt = $this->pdo->prepare("SELECT * FROM cursos WHERE id = :id");
+        $stmt->execute([':id' => $id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // public function getEstudiantes($curso_id) {
+    //     $stmt = $this->pdo->prepare("SELECT * FROM estudiantes WHERE curso_id = :curso_id ORDER BY nombre");
+    //     $stmt->execute([':curso_id' => $curso_id]);
+    //     return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    // }
+
+    // Obtener estudiantes por curso con búsqueda y paginación
+public function getEstudiantes($curso_id, $search = '', $limit = 10, $offset = 0) {
+    $sql = "SELECT * FROM estudiantes WHERE curso_id = :curso_id";
+    $params = [':curso_id' => $curso_id];
+
+    if (!empty($search)) {
+        $sql .= " AND (nombre LIKE :search OR apellido_paterno LIKE :search OR apellido_materno LIKE :search)";
+        $params[':search'] = "%$search%";
+    }
+
+    $sql .= " ORDER BY nombre LIMIT :limit OFFSET :offset";
+
+    $stmt = $this->pdo->prepare($sql);
+    $stmt->bindValue(':curso_id', $curso_id, PDO::PARAM_INT);
+    $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+    
+    if (!empty($search)) {
+        $stmt->bindValue(':search', "%$search%", PDO::PARAM_STR);
+    }
+
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// Contar estudiantes (para paginación)
+public function countEstudiantes($curso_id, $search = '') {
+    $sql = "SELECT COUNT(*) FROM estudiantes WHERE curso_id = :curso_id";
+    $params = [':curso_id' => $curso_id];
+
+    if (!empty($search)) {
+        $sql .= " AND (nombre LIKE :search OR apellido_paterno LIKE :search OR apellido_materno LIKE :search)";
+        $params[':search'] = "%$search%";
+    }
+
+    $stmt = $this->pdo->prepare($sql);
+    $stmt->execute($params);
+    return (int)$stmt->fetchColumn();
+}
 
     /**
      * Eliminar un curso
@@ -119,19 +97,44 @@ class Curso {
      */
     public function delete($id) {
         try {
-            // Validar ID
             $id = filter_var($id, FILTER_VALIDATE_INT);
             if (!$id) {
                 return false;
             }
             
-            $query = "DELETE FROM {$this->table} WHERE id = ?";
-            $stmt = $this->pdo->prepare($query);
+            $stmt = $this->pdo->prepare("DELETE FROM cursos WHERE id = ?");
             $result = $stmt->execute([$id]);
             return $result;
         } catch(PDOException $e) {
             error_log('Error al eliminar curso: ' . $e->getMessage());
             return false;
+        }
+    }
+
+    /**
+     * Buscar cursos por grado, sección o descripción
+     * @param string $search Término de búsqueda
+     * @return array Lista de cursos que coinciden con la búsqueda
+     */
+    public function search($search) {
+        try {
+            $search = htmlspecialchars(trim($search));
+            if (empty($search)) {
+                return $this->getAll();
+            }
+            
+            $stmt = $this->pdo->prepare("SELECT c.*, COUNT(e.id) as total_estudiantes 
+                                         FROM cursos c 
+                                         LEFT JOIN estudiantes e ON c.id = e.curso_id 
+                                         WHERE c.grado LIKE ? OR c.seccion LIKE ? OR c.descripcion LIKE ?
+                                         GROUP BY c.id 
+                                         ORDER BY c.grado, c.seccion");
+            $searchTerm = "%$search%";
+            $stmt->execute([$searchTerm, $searchTerm, $searchTerm]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch(PDOException $e) {
+            error_log('Error al buscar cursos: ' . $e->getMessage());
+            return [];
         }
     }
 }

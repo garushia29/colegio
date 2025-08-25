@@ -3,130 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editar Estudiante - Colegio JIM</title>
+    <title>Editar Estudiante</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../public/css/style_index.css">
+
+    <link rel="stylesheet" href="<?php echo URL; ?>public/css/cursos_create.css">
+    <link rel="stylesheet" href="<?php echo URL; ?>public/css/navbar.css">
+    <link rel="stylesheet" href="<?php echo URL; ?>public/css/style_index.css">    
+    <link rel="stylesheet" href="<?php echo URL; ?>public/css/footer.css">
 </head>
 <body>
-    <div class="container">
-        <header class="d-flex justify-content-between align-items-center py-3">
-            <div>
-                <img src="../public/img/logo.jpeg" alt="Logo Colegio JIM" class="logo">
-            </div>
-            <h1 class="text-center">Sistema de Gestión Escolar</h1>
-            <div></div>
-        </header>
-
-        <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
-            <div class="container-fluid">
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav">
-                        <li class="nav-item">
-                            <a class="nav-link" href="../public/index.php">Cursos</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link active" href="../public/estudiantes/index.php">Estudiantes</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-
+    <?php include __DIR__ . '/../components/navbarEstudiante.php'; ?>
+    <div class="container"> 
         <div class="row mb-3">
             <div class="col">
                 <h2>Editar Estudiante</h2>
             </div>
         </div>
 
-        <?php if (isset($error) && $error): ?>
+        <?php if (!empty($error)): ?>
             <div class="alert alert-danger"><?php echo $error; ?></div>
         <?php endif; ?>
 
-        <?php if (isset($success) && $success): ?>
+        <?php if (!empty($success)): ?>
             <div class="alert alert-success"><?php echo $success; ?></div>
         <?php endif; ?>
 
-        <form action="../public/estudiantes/actualizar_estudiante.php?id=<?php echo $estudiante['id']; ?>" method="POST" class="mb-4">
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="nombres" class="form-label">Nombres *</label>
-                        <input type="text" class="form-control" id="nombres" name="nombres" value="<?php echo htmlspecialchars($estudiante['nombres']); ?>" required>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="apellidos" class="form-label">Apellidos *</label>
-                        <input type="text" class="form-control" id="apellidos" name="apellidos" value="<?php echo htmlspecialchars($estudiante['apellidos']); ?>" required>
-                    </div>
-                </div>
-            </div>
+        <form action="<?php echo URL; ?>public/estudiantes/update" method="POST" class="mb-4">
+            <input type="hidden" name="id" value="<?php echo $estudiante['id']; ?>">
 
             <div class="row mb-3">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="cedula" class="form-label">Cédula</label>
-                        <input type="text" class="form-control" id="cedula" name="cedula" value="<?php echo htmlspecialchars($estudiante['cedula'] ?? ''); ?>">
-                        <small class="text-muted">Opcional.</small>
-                    </div>
+                <div class="col-md-4">
+                    <label for="numero" class="form-label">Número</label>
+                    <input type="text" class="form-control" id="numero" name="numero" 
+                           value="<?php echo htmlspecialchars($estudiante['numero']); ?>">
                 </div>
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="curso_id" class="form-label">Curso *</label>
-                        <select class="form-select" id="curso_id" name="curso_id" required>
-                            <option value="">Seleccione un curso</option>
-                            <?php foreach ($cursos as $curso): ?>
-                                <option value="<?php echo $curso['id']; ?>" <?php echo ($estudiante['curso_id'] == $curso['id']) ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($curso['grado'] . ' - ' . $curso['seccion']); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
+                <div class="col-md-4">
+                    <label for="ci" class="form-label">Cédula / CI *</label>
+                    <input type="text" class="form-control" id="ci" name="ci" required 
+                           value="<?php echo htmlspecialchars($estudiante['ci']); ?>">
+                </div>
+                <div class="col-md-4">
+                    <label for="nombre" class="form-label">Nombre *</label>
+                    <input type="text" class="form-control" id="nombre" name="nombre" required 
+                           value="<?php echo htmlspecialchars($estudiante['nombre']); ?>">
+                </div>
+                <div class="col-md-4">
+                    <label for="apellido_paterno" class="form-label">Apellido Paterno *</label>
+                    <input type="text" class="form-control" id="apellido_paterno" name="apellido_paterno" required 
+                           value="<?php echo htmlspecialchars($estudiante['apellido_paterno']); ?>">
                 </div>
             </div>
 
             <div class="row mb-3">
                 <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="fecha_nacimiento" class="form-label">Fecha de Nacimiento</label>
-                        <input type="date" class="form-control" id="fecha_nacimiento" name="fecha_nacimiento" value="<?php echo htmlspecialchars($estudiante['fecha_nacimiento'] ?? ''); ?>">
-                        <small class="text-muted">Opcional.</small>
-                    </div>
+                    <label for="apellido_materno" class="form-label">Apellido Materno *</label>
+                    <input type="text" class="form-control" id="apellido_materno" name="apellido_materno"
+                           value="<?php echo htmlspecialchars($estudiante['apellido_materno'] ?? ''); ?>">
                 </div>
                 <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="telefono" class="form-label">Teléfono</label>
-                        <input type="tel" class="form-control" id="telefono" name="telefono" value="<?php echo htmlspecialchars($estudiante['telefono'] ?? ''); ?>">
-                        <small class="text-muted">Opcional.</small>
-                    </div>
+                    <label for="fecha_nacimiento" class="form-label">Fecha de Nacimiento</label>
+                    <input type="date" class="form-control" id="fecha_nacimiento" name="fecha_nacimiento"
+                           value="<?php echo htmlspecialchars($estudiante['fecha_nacimiento'] ?? ''); ?>">
                 </div>
             </div>
 
-            <div class="mb-3">
-                <label for="email" class="form-label">Correo Electrónico</label>
-                <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($estudiante['email'] ?? ''); ?>">
-                <small class="text-muted">Opcional.</small>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="genero" class="form-label">Género *</label>
+                    <select class="form-select" id="genero" name="genero" required>
+                        <option value="">Seleccione...</option>
+                        <option value="masculino" <?php echo ($estudiante['genero'] === 'masculino') ? 'selected' : ''; ?>>Masculino</option>
+                        <option value="femenino" <?php echo ($estudiante['genero'] === 'femenino') ? 'selected' : ''; ?>>Femenino</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="curso_id" class="form-label">Curso *</label>
+                    <select class="form-select" id="curso_id" name="curso_id" required>
+                        <option value="">Seleccione un curso</option>
+                        <?php foreach ($cursos as $curso): ?>
+                            <option value="<?php echo $curso['id']; ?>" 
+                                <?php echo ($estudiante['curso_id'] == $curso['id']) ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($curso['grado'] . ' - ' . $curso['seccion']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
             </div>
 
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="telefono" class="form-label">Teléfono</label>
+                    <input type="tel" class="form-control" id="telefono" name="telefono"
+                           value="<?php echo htmlspecialchars($estudiante['telefono'] ?? ''); ?>">
+                </div>
+            </div>
+            
             <div class="mb-3">
                 <label for="direccion" class="form-label">Dirección</label>
-                <textarea class="form-control" id="direccion" name="direccion" rows="3"><?php echo htmlspecialchars($estudiante['direccion'] ?? ''); ?></textarea>
-                <small class="text-muted">Opcional.</small>
+                <textarea class="form-control" id="direccion" name="direccion" rows="2"><?php echo htmlspecialchars($estudiante['direccion'] ?? ''); ?></textarea>
             </div>
 
+            <h5>Información del Tutor</h5>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="nombre_tutor" class="form-label">Nombre del Tutor *</label>
+                    <input type="text" class="form-control" id="nombre_tutor" name="nombre_tutor" required
+                           value="<?php echo htmlspecialchars($estudiante['nombre_tutor'] ?? ''); ?>">
+                </div>
+                <div class="col-md-6">
+                    <label for="telefono_tutor" class="form-label">Teléfono del Tutor</label>
+                    <input type="tel" class="form-control" id="telefono_tutor" name="telefono_tutor"
+                           value="<?php echo htmlspecialchars($estudiante['telefono_tutor'] ?? ''); ?>">
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="email_tutor" class="form-label">Email del Tutor</label>
+                    <input type="email" class="form-control" id="email_tutor" name="email_tutor"
+                           value="<?php echo htmlspecialchars($estudiante['email_tutor'] ?? ''); ?>">
+                </div>
+            </div>      
             <div class="d-flex justify-content-end gap-2">
-                <a href="../public/estudiantes/index.php" class="btn btn-secondary">Cancelar</a>
+                <a href="<?php echo URL; ?>public/estudiantes" class="btn btn-secondary">Cancelar</a>
                 <button type="submit" class="btn btn-primary">Actualizar Estudiante</button>
             </div>
         </form>
     </div>
 
-    <footer class="text-center py-3 mt-5 bg-light">
-        <p>Sistema de Gestión Escolar - Colegio JIM &copy; <?php echo date('Y'); ?></p>
-    </footer>
+    <?php include __DIR__ . '/../components/footer.php'; ?>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>

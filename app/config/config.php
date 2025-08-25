@@ -1,6 +1,6 @@
 <?php
 // URL base del proyecto (para cargar CSS, JS, imágenes)
-define('URL', 'http://localhost/colegio_jim/');
+define('URL', 'http://localhost/colegio/');
 
 // Base de datos
 define('DB_HOST', 'localhost');
