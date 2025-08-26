@@ -1,17 +1,21 @@
 <?php
 require_once __DIR__ . '/../controllers/CursoController.php';
 require_once __DIR__ . '/../controllers/EstudianteController.php';
+require_once __DIR__ . '/../controllers/UsuarioController.php';
 
 require_once __DIR__ . '/../controllers/AuthController.php';
 
-class Router {
+class Router
+{
     private $pdo;
 
-    public function __construct($pdo) {
+    public function __construct($pdo)
+    {
         $this->pdo = $pdo;
     }
 
-    public function route($path) {
+    public function route($path)
+    {
         switch ($path) {
             // Login
             case '/colegio/public/login':
@@ -62,6 +66,10 @@ class Router {
                 $controller = new CursoController($this->pdo);
                 $controller->delete($_POST['id'] ?? null);
                 break;
+            case '/colegio/public/cursos/pdf':
+                $controller = new CursoController($this->pdo);
+                $controller->pdf($_POST['id'] ?? null);
+                break;
             // Estudiantes
             case '/colegio/public/estudiantes':
                 $controller = new EstudianteController($this->pdo);
@@ -96,6 +104,50 @@ class Router {
             case '/colegio/public/estudiantes/delete':
                 $controller = new EstudianteController($this->pdo);
                 $controller->delete($_POST['id'] ?? null);
+                break;
+
+            // Reportes
+            case '/colegio/public/reportes':
+                require_once __DIR__ . '/../controllers/ReporteController.php';
+                $controller = new ReporteController($this->pdo);
+                $controller->index();
+                break;
+
+            case '/colegio/public/reportes/estudiantes-curso':
+                require_once __DIR__ . '/../controllers/ReporteController.php';
+                $controller = new ReporteController($this->pdo);
+                $controller->estudiantesConCurso();
+                break;
+
+            case '/colegio/public/reportes/estudiantes-por-curso':
+                require_once __DIR__ . '/../controllers/ReporteController.php';
+                $controller = new ReporteController($this->pdo);
+                $controller->estudiantesPorCurso();
+                break;
+            // Usuarios
+            case '/colegio/public/usuarios':
+                $controller = new UsuarioController($this->pdo);
+                $controller->index();
+                break;
+            case '/colegio/public/usuarios/create':
+                $controller = new UsuarioController($this->pdo);
+                $controller->create();
+                break;
+            case '/colegio/public/usuarios/store':
+                $controller = new UsuarioController($this->pdo);
+                $controller->store();
+                break;
+            case '/colegio/public/usuarios/edit':
+                $controller = new UsuarioController($this->pdo);
+                $controller->edit();
+                break;
+            case '/colegio/public/usuarios/update':
+                $controller = new UsuarioController($this->pdo);
+                $controller->update();
+                break;
+            case '/colegio/public/usuarios/delete':
+                $controller = new UsuarioController($this->pdo);
+                $controller->delete();
                 break;
 
             default:

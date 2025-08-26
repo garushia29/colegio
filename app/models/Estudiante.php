@@ -253,4 +253,22 @@ class Estudiante
             return [];
         }
     }
+
+    //obtener estudiantes por curso con informacion completa
+    public function getByCursoCompleto($curso_id)
+{
+    try {
+        $query = "SELECT e.*, c.grado, c.seccion 
+                  FROM {$this->table} e 
+                  LEFT JOIN cursos c ON e.curso_id = c.id 
+                  WHERE e.curso_id = ? 
+                  ORDER BY e.apellido_paterno, e.nombre";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute([$curso_id]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log('Error al obtener estudiantes por curso: ' . $e->getMessage());
+        return [];
+    }
+}
 }

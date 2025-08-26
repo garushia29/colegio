@@ -16,9 +16,13 @@
         <h2>Curso: <?= htmlspecialchars($curso['grado'] . ' ' . $curso['seccion']); ?></h2>
         <p><strong>Año escolar:</strong> <?= htmlspecialchars($curso['año_escolar']); ?></p>
         <p><strong>Descripción:</strong> <?= htmlspecialchars($curso['descripcion']); ?></p>
-        
+
         <a href="<?php echo URL; ?>public/cursos/edit?id=<?php echo $curso['id']; ?>" class="btn btn-primary">Editar Curso</a>
+        <a href="<?php echo URL; ?>public/cursos/pdf?id=<?php echo $curso['id']; ?>"  class="btn btn-secondary">Descargar Reporte del Curso</a>
+
         <h3 class="mt-4">Estudiantes del curso</h3>
+
+
 
         <!-- Formulario de búsqueda -->
         <form method="GET" class="mb-3 d-flex gap-2 align-items-center">
@@ -26,7 +30,7 @@
             <input type="hidden" name="action" value="show">
             <input type="hidden" name="id" value="<?= $curso['id'] ?>">
             <input type="text" name="search" class="form-control" placeholder="Buscar por nombre o apellido"
-                   value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
+                value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
             <button class="btn btn-primary btn-sm" type="submit">Buscar</button>
         </form>
 
@@ -62,20 +66,7 @@
             </table>
 
             <!-- Paginación -->
-            <?php if ($totalPages > 1): ?>
-                <nav>
-                    <ul class="pagination">
-                        <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                            <li class="page-item <?= ($i == $page) ? 'active' : '' ?>">
-                                <a class="page-link"
-                                   href="<?= URL ?>public/index.php?controller=Curso&action=show&id=<?= $curso['id'] ?>&search=<?= urlencode($search) ?>&page=<?= $i ?>">
-                                    <?= $i ?>
-                                </a>                               
-                            </li>
-                        <?php endfor; ?>
-                    </ul>
-                </nav>
-            <?php endif; ?>
+            
 
         <?php else: ?>
             <p>No hay estudiantes asignados a este curso.</p>
